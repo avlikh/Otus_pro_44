@@ -36,7 +36,7 @@ apt update -y && apt install git -y ; git clone https://github.com/avlikh/Otus_p
 vagrant up
 ```
 **Результатом выполнения команды vagrant up станет:** 
-* созданные 2 виртуальных машины **mysqlsrs** и **mysqlrep** с установленными MySQL серверами;
+* созданные 2-х виртуальных машин **mysqlsrs** и **mysqlrep** с установленными MySQL серверами;
 * на MySQL source (mysqlsrs) загружен дамп таблицы 'bet';
 * настроена GTID репликация с MySQL source (mysqlsrs) на MySQL replica (mysqlrep), при этом таблицы bet.events_on_demand и bet.v_same_event исключены из репликации.
 ---
