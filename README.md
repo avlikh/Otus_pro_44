@@ -246,3 +246,48 @@ Source_SSL_Verify_Server_Cert: No
 </details>
 
 **Видим что репликация работает корректно.**
+
+P.S.   
+
+<details>
+<summary> Конфиг MySQL source (master): </summary>
+
+```
+[mysqld]
+pid-file	= /var/run/mysqld/mysqld.pid
+socket		= /var/run/mysqld/mysqld.sock
+datadir		= /var/lib/mysql
+log-error	= /var/log/mysql/error.log
+
+bind-address    = 0.0.0.0
+server-id	= 1
+log-bin		= mysql-bin
+binlog_format	= row
+gtid-mode=ON
+enforce-gtid-consistency
+log-replica-updates
+```
+</details>
+
+<details>
+<summary> Конфиг MySQL replica (slave): </summary>
+
+```
+[mysqld]
+pid-file	= /var/run/mysqld/mysqld.pid
+socket		= /var/run/mysqld/mysqld.sock
+datadir		= /var/lib/mysql
+log-error	= /var/log/mysql/error.log
+
+bind-address    = 0.0.0.0
+server-id       = 2
+log-bin         = mysql-bin
+relay-log	= relay-log-server
+read-only	= ON
+gtid-mode=ON
+enforce-gtid-consistency
+log-replica-updates
+replicate-ignore-table=bet.events_on_demand
+replicate-ignore-table=bet.v_same_event
+```
+</details>
