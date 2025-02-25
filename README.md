@@ -40,18 +40,86 @@ vagrant up
 * на MySQL source (mysqlsrs) загружен дамп таблицы 'bet';
 * настроена GTID репликация с MySQL source (mysqlsrs) на MySQL replica (mysqlrep), при этом таблицы bet.events_on_demand и bet.v_same_event исключены из репликации.
 ---
-### 2. В материалах приложены ссылки на вагрант для репликации и дамп базы bet.dmp**
-Базу развернуть на мастере и настроить так, чтобы реплицировались таблицы:
-| bookmaker   |   
-| competition |   
-| market      |   
-| odds        |   
-| outcome     |   
+### 2. Домашнее задание было выполнено при помощи Vagrant+Ansible.
    
-Настроить GTID репликацию   
+Проверим что стенд коректно работает и условия домашнего задания выполнены.
 
-Домашнее задание было выполнено при помощи Vagrant+Ansible.
-   
-Проверим что стенд коректно настроился и условия домашнего задания выполнены.
+Зайдем на мастер и повысим полномочия до root: 
+```   
+vagrant ssh mysqlsrs   
+```
+```
+sudo -i
+```
+
+Зайдем в mysql:   
+```
+mysql
+```
+Выведим список баз данных:
+```
+show databases;
+```
+<details>
+<summary> результат выполнения команды: </summary>
+
+```
++--------------------+
+| Database           |
++--------------------+
+| bet                |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.01 sec)
+```
+</details>
+
+Выберим базу 'bet'
+```
+use bet;
+```
+
+Посмотрим таблицы базы данных:
+
+```
+show tables;
+```
+<details>
+<summary> результат выполнения команды: </summary>
+
+```
++------------------+
+| Tables_in_bet    |
++------------------+
+| bookmaker        |
+| competition      |
+| events_on_demand |
+| market           |
+| odds             |
+| outcome          |
+| v_same_event     |
++------------------+
+7 rows in set (0.01 sec)
+```
+</details>
 
 
+
+и посмотрим таблицы в базе данных 'bet'   
+Для этого выполним 
+```
+id vagrant && id root && id otusadm && id otus
+```
+<details>
+<summary> результат выполнения команды: </summary>
+
+```
+uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant),1003(admin)
+uid=0(root) gid=0(root) groups=0(root),1003(admin)
+uid=1001(otusadm) gid=1001(otusadm) groups=1001(otusadm),1003(admin)
+uid=1002(otus) gid=1002(otus) groups=1002(otus)
+```
+</details>
