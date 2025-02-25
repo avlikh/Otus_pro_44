@@ -1,0 +1,105 @@
+---
+- hosts: all # part running on all hosts
+  become: true
+  tasks:
+
+    - name: all hosts - Copy MySQL repository
+      copy:
+        src   : "files/all/etc/apt/sources.list.d/mysql.list"
+        dest  : "/etc/apt/sources.list.d/mysql.list"
+        owner : root
+        group : root
+        mode  : '0644'
+        backup: yes
+
+    - name: all hosts - Copy MySQL repository keyring
+      copy:
+        src   : "files/all/usr/share/keyrings/mysql-apt-config.gpg"
+        dest  : "/usr/share/keyrings/mysql-apt-config.gpg"
+        owner : root
+        group : root
+        mode  : '0644'
+        backup: yes
+
+    - name: all hosts - Update repositories cache and install mysql, curl, mc
+      ansible.builtin.apt:
+        pkg:
+        - mysql-server
+        - curl
+        - mc
+        update_cache: yes
+
+    - name: mysqlsrs - Copy bet.dmp to /tmp/
+      ansible.builtin.copy:
+        src: "files/mysqlsrs/tmp/bet.dmp"
+        dest: /tmp/
+        owner: root
+        group: root
+        mode: '0644'
+      when: inventory_hostname == "mysqlsrs"
+
+    - name: mysqlsrs - Copy MySQL config
+      ansible.builtin.copy:
+        src: "files/mysqlsrs/etc/mysql/mysql.conf.d/mysqld.cnf"
+        dest: "/etc/mysql/mysql.conf.d/mysqld.cnf"
+        owner: root
+        group: root
+        mode: '0644'
+      when: inventory_hostname == "mysqlsrs"
+
+    - name: mysqlrep - Copy MySQL config
+      ansible.builtin.copy:
+        src: "files/mysqlrep/etc/mysql/mysql.conf.d/mysqld.cnf"
+        dest: "/etc/mysql/mysql.conf.d/mysqld.cnf"
+        owner: root
+        group: root
+        mode: '0644'
+      when: inventory_hostname == "mysqlrep"
+
+    - name: all hosts - restart MySQL
+      systemd:
+        unit: mysql.service
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+
+    - name: mysqlsrs - Execute command create user for MySQL source
+      shell: 
+        cmd: mysql -e "CREATE USER repl@'%' IDENTIFIED WITH 'caching_sha2_password' BY 'oTUSlave#2020';"
+      when: inventory_hostname == "mysqlsrs"
+
+    - name: mysqlsrs - Execute command MySQL grant replication
+      shell: 
+        cmd: mysql -e "GRANT REPLICATION SLAVE ON *.* TO repl@'%';"
+      when: inventory_hostname == "mysqlsrs"
+
+    - name: mysqlsrs - Execute command MySQL flush privileges
+      shell: 
+        cmd: mysql -e "FLUSH PRIVILEGES;"
+      when: inventory_hostname == "mysqlsrs"
+
+    - name: mysqlrep - Execute command MySQL stop replica
+      shell: 
+        cmd: mysql -e "STOP REPLICA;"
+      when: inventory_hostname == "mysqlrep"
+
+    - name: mysqlrep - Execute command turn on MySQL replica
+      shell: 
+        cmd: mysql -e "CHANGE REPLICATION SOURCE TO SOURCE_HOST='192.168.57.10', SOURCE_USER='repl', SOURCE_PASSWORD='oTUSlave#2020', SOURCE_AUTO_POSITION = 1, GET_SOURCE_PUBLIC_KEY = 1;"
+      when: inventory_hostname == "mysqlrep"
+
+    - name: mysqlrep - Execute command MySQL start replica
+      shell: 
+        cmd: mysql -e "START REPLICA;"
+      when: inventory_hostname == "mysqlrep"
+
+    - name: mysqlsrs - Execute command create database bet
+      shell: 
+        cmd: mysql -e "CREATE DATABASE bet;"
+      when: inventory_hostname == "mysqlsrs"
+
+    - name: mysqlsrs - Execute command import bet.dmp
+      shell: 
+        cmd: mysql -e "SOURCE /tmp/bet.dmp" bet
+      when: inventory_hostname == "mysqlsrs"
+...
